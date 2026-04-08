@@ -81,12 +81,19 @@ node app/server.js
 
 4. 在 **Actions** 里 **Re-run** 一次 workflow，或向 `main` 再推一个 commit。
 
-**本地跑 harness 并走真实 OpenAI**（同样在终端导出，勿泄露 key）：
+**本地跑 harness 并走真实 OpenAI**（二选一，勿泄露 key）：
+
+1. **推荐：`.env` 文件**（`harness.sh` 会自动 `source`；`.env` 已在 `.gitignore` 中）  
+   - 复制模板：`cp .env.example .env`  
+   - 编辑 `.env`，设置 `OPENAI_API_KEY=你的密钥`；模板里已含 aihubmix 示例：`OPENAI_API_BASE=https://aihubmix.com/v1`、`OPENAI_MODEL=gpt-4.1-mini-free`。  
+   - 实际请求地址为 `{OPENAI_API_BASE}/chat/completions`（与 `https://aihubmix.com/v1/chat/completions` 一致）。
+
+2. **或当前 shell 导出：**
 
 ```bash
-export OPENAI_API_KEY="sk-..."   # 必填
-export OPENAI_API_BASE="https://api.openai.com/v1"   # 可选
-export OPENAI_MODEL="gpt-4o-mini"                     # 可选
+export OPENAI_API_KEY="你的密钥"   # 必填
+export OPENAI_API_BASE="https://aihubmix.com/v1"
+export OPENAI_MODEL="gpt-4.1-mini-free"
 ```
 
 （`OPENAI_BASE_URL` 与 `OPENAI_API_BASE` 等价，任选其一。）
