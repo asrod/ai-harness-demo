@@ -1,0 +1,52 @@
+name: AI Harness Demo
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Install Node deps (if any)
+        run: npm install
+
+      - name: Make scripts executable
+        run: chmod +x scripts/harness.sh scripts/ai-fix.sh
+
+      - name: Git identity (for AI repair commit)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Run harness (tests + optional AI repair)
+        run: bash scripts/harness.sh
+        env:
+          # 在仓库 Settings → Secrets 中配置 OPENAI_API_KEY；未配置时 ai-fix 走 mock
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-4o-mini
+
+      - name: Show recent git log (debug)
+        if: always()
+        run: git --no-pager log -3 --oneline || true

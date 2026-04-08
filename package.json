@@ -1,0 +1,13 @@
+{
+  "name": "ai-harness-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal AI Harness demo: Node API + Karate + bash harness",
+  "scripts": {
+    "start": "node app/server.js",
+    "harness": "bash scripts/harness.sh"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
