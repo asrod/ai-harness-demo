@@ -64,6 +64,18 @@ GitHub **不会**自动把「测试通过」当成合并门槛，需要在仓库
 
 配置完成后：PR 在 **Checks** 里该项未通过（或仍为失败）时，**Merge** 会被禁用，直到 Harness/Karate 通过（含 AI 自动修复后再次跑绿的情况）。
 
+### PR 上 AI 已推修复，但仍显示 Blocked / 没有 Checks？
+
+**原因：** 工作流里用默认 **`GITHUB_TOKEN`** 执行 `git push` 时，GitHub **故意不会再触发**新的 Actions（避免无限循环），因此**机器人新推上去的那个 commit 上不会出现「PR Karate Harness」**。分支保护要求该检查通过时，界面会一直卡在 **Blocked**，即使代码已经修好。
+
+**临时解决（任选其一）：**
+
+- 本地往 PR 分支推一个空提交：  
+  `git checkout <PR 头分支> && git commit --allow-empty -m "chore: trigger CI" && git push`
+- 或使用 **Actions → AI Harness Demo → Run workflow**，在 **ref** 里填 PR 头分支名（如 `feat/test-AI`），在最新代码上再跑一轮检查。
+
+**推荐根治：** 在仓库 Secrets 中增加 **`AI_HARNESS_PUSH_TOKEN`**（[Fine-grained PAT](https://github.com/settings/tokens?type=beta)，仅本仓库 **Contents: Read and write**）。本 workflow 的 checkout 已配置为 **`secrets.AI_HARNESS_PUSH_TOKEN || secrets.GITHUB_TOKEN`**，配置 PAT 后机器人推送会正常触发下一轮 CI，必选检查会落在最新 commit 上。
+
 ### 用 `gh` 建库并配置 OpenAI（勿在聊天里发送密钥）
 
 1. 安装并登录 [GitHub CLI](https://cli.github.com/)：`gh auth login`
