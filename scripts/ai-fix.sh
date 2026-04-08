@@ -40,8 +40,13 @@ diff -u "$BEFORE" "$SERVER_FILE" || true
 echo ""
 
 if git rev-parse --git-dir >/dev/null 2>&1; then
-  git config user.name "${GIT_AUTHOR_NAME:-AI Harness}"
-  git config user.email "${GIT_AUTHOR_EMAIL:-ai-harness@local}"
+  if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+    git config user.name "${GIT_AUTHOR_NAME:-github-actions[bot]}"
+    git config user.email "${GIT_AUTHOR_EMAIL:-41898282+github-actions[bot]@users.noreply.github.com}"
+  else
+    git config user.name "${GIT_AUTHOR_NAME:-AI Harness}"
+    git config user.email "${GIT_AUTHOR_EMAIL:-ai-harness@local}"
+  fi
 
   # PR 事件：留在当前 PR 头部分支，推送后 PR 上会出现「AI 修复」新 commit
   if [[ "${GITHUB_ACTIONS:-}" == "true" && -n "${GITHUB_HEAD_REF:-}" ]]; then
