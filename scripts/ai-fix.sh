@@ -43,18 +43,30 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
   git config user.name "${GIT_AUTHOR_NAME:-AI Harness}"
   git config user.email "${GIT_AUTHOR_EMAIL:-ai-harness@local}"
 
-  BRANCH="fix/ai-repair"
-  if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
-    git checkout "$BRANCH"
+  # PR 事件：留在当前 PR 头部分支，推送后 PR 上会出现「AI 修复」新 commit
+  if [[ "${GITHUB_ACTIONS:-}" == "true" && -n "${GITHUB_HEAD_REF:-}" ]]; then
+    BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    if [[ "$BRANCH" == "HEAD" ]]; then
+      echo "[ai-fix] Checking out PR head: $GITHUB_HEAD_REF"
+      git checkout "$GITHUB_HEAD_REF"
+      BRANCH="$GITHUB_HEAD_REF"
+    fi
+    echo "[ai-fix] PR harness: repair commit will push to branch «$BRANCH» (updates open PR)"
   else
-    git checkout -b "$BRANCH"
+    BRANCH="fix/ai-repair"
+    if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+      git checkout "$BRANCH"
+    else
+      git checkout -b "$BRANCH"
+    fi
+    echo "[ai-fix] Push branch: $BRANCH"
   fi
 
   git add "$SERVER_FILE"
   if git diff --cached --quiet; then
     echo "[ai-fix] No staged changes (already fixed?)"
   else
-    MSG="fix(hello): align /hello response with API contract (AI repair)"
+    MSG="fix(hello): AI harness repair — align /hello with Karate contract"
     git commit -m "$MSG"
     echo "[ai-fix] Committed on branch $BRANCH"
   fi

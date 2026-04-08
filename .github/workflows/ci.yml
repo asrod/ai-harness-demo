@@ -4,6 +4,7 @@ on:
   push:
     branches: [main, master]
   pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -12,10 +13,13 @@ jobs:
     permissions:
       contents: write
     steps:
+      # PR：检出源分支，便于 harness 失败后把 AI 修复 commit 推回同一 PR
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
