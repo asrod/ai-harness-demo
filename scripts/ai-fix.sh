@@ -21,7 +21,7 @@ if [[ -n "${OPENAI_API_KEY:-}" ]]; then
   echo "[ai-fix] 模式: 真实 LLM（非规则替换）"
   echo "[ai-fix] 端点: ${_BASE}/chat/completions"
   echo "[ai-fix] 模型: ${OPENAI_MODEL:-gpt-4o-mini}"
-  echo "[ai-fix] 说明: 将当前 app/server.js 与失败用例的契约发给模型，由模型返回整文件后落盘"
+  echo "[ai-fix] 说明: 读取 test/*.feature 作为契约，由模型改写源码并生成 commit 标题/正文"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   node scripts/openai-apply.js
 else
@@ -71,8 +71,20 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
   if git diff --cached --quiet; then
     echo "[ai-fix] No staged changes (already fixed?)"
   else
-    MSG="fix(hello): AI harness repair — align /hello with Karate contract"
-    git commit -m "$MSG"
+    COMMIT_TMP=$(mktemp)
+    if [[ -n "${OPENAI_API_KEY:-}" ]] && [[ -f "$ROOT/.harness-ai-commit.json" ]]; then
+      node "$ROOT/scripts/git-commit-from-ai-json.js" "$ROOT/.harness-ai-commit.json" "$COMMIT_TMP"
+      rm -f "$ROOT/.harness-ai-commit.json"
+      git commit -F "$COMMIT_TMP"
+    else
+      # mock：无 LLM，提交说明保持通用，不写死某条 API/测试名
+      printf '%s\n\n%s\n' \
+        "chore: harness mock patch (rule-based, not LLM)" \
+        "No OPENAI_API_KEY: applied fixed string replacement only. Configure a key for model-written code and commit messages tied to test/*.feature." \
+        > "$COMMIT_TMP"
+      git commit -F "$COMMIT_TMP"
+    fi
+    rm -f "$COMMIT_TMP"
     echo "[ai-fix] Committed on branch $BRANCH"
   fi
 
