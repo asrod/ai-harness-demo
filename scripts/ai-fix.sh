@@ -6,29 +6,38 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 SERVER_FILE="app/server.js"
 
+if [[ ! -f "$SERVER_FILE" ]]; then
+  echo "[ai-fix] ERROR: missing $SERVER_FILE"
+  exit 1
+fi
+
+BEFORE=$(mktemp)
+trap 'rm -f "$BEFORE"' EXIT
+cp "$SERVER_FILE" "$BEFORE"
+
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if [[ -n "${OPENAI_API_KEY:-}" ]]; then
   _BASE="${OPENAI_API_BASE:-${OPENAI_BASE_URL:-https://api.openai.com/v1}}"
-  echo "[ai-fix] Mode: OpenAI API"
-  echo "[ai-fix] API base: ${_BASE}"
-  echo "[ai-fix] Model: ${OPENAI_MODEL:-gpt-4o-mini}"
-  echo "[ai-fix] Reasoning: delegating code repair to LLM (JSON fullFile response)"
+  echo "[ai-fix] 模式: 真实 LLM（非规则替换）"
+  echo "[ai-fix] 端点: ${_BASE}/chat/completions"
+  echo "[ai-fix] 模型: ${OPENAI_MODEL:-gpt-4o-mini}"
+  echo "[ai-fix] 说明: 将当前 app/server.js 与失败用例的契约发给模型，由模型返回整文件后落盘"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   node scripts/openai-apply.js
 else
-  echo "[ai-fix] Mode: mock (no OPENAI_API_KEY)"
-  echo "[ai-fix] Reasoning:"
-  echo "  - 测试期望 GET /hello 返回 JSON: { message: 'world' }"
-  echo "  - 当前实现返回 'wrong'，与契约不一致"
-  echo "  - 行动：将错误字面量改为 'world'"
+  echo "[ai-fix] 模式: mock（无 OPENAI_API_KEY，仅演示 Harness 流程）"
+  echo "[ai-fix] 规则: 把字面量 'wrong' → 'world'（固定替换，不是 LLM）"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  if [[ ! -f "$SERVER_FILE" ]]; then
-    echo "[ai-fix] ERROR: missing $SERVER_FILE"
-    exit 1
-  fi
   perl -i -pe "s/'wrong'/'world'/" "$SERVER_FILE"
-  echo "[ai-fix] Patched $SERVER_FILE (mock)"
+  echo "[ai-fix] 已用 perl 完成 mock 补丁"
 fi
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  此处可见「AI / 修复逻辑」对源码的实际改动（unified diff）     ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
+diff -u "$BEFORE" "$SERVER_FILE" || true
+echo ""
 
 if git rev-parse --git-dir >/dev/null 2>&1; then
   git config user.name "${GIT_AUTHOR_NAME:-AI Harness}"

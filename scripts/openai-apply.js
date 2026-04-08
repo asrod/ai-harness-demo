@@ -30,6 +30,15 @@ const url = `${apiBase}/chat/completions`;
 
 const current = fs.readFileSync(serverPath, 'utf8');
 
+console.log('[openai-apply] ── LLM 介入 ──');
+console.log('[openai-apply] 请求:', 'POST', url);
+console.log('[openai-apply] 模型:', model);
+console.log(
+  '[openai-apply] 输入: app/server.js 共',
+  current.split('\n').length,
+  '行；任务: 满足 GET /hello → {"message":"world"}',
+);
+
 const body = {
   model,
   response_format: { type: 'json_object' },
@@ -94,7 +103,14 @@ async function main() {
   }
 
   fs.writeFileSync(serverPath, full, 'utf8');
-  console.log('[openai-apply] Wrote app/server.js (' + full.split('\n').length + ' lines)');
+  console.log(
+    '[openai-apply] LLM 已生成新文件并写入 app/server.js（',
+    full.split('\n').length,
+    '行，',
+    Buffer.byteLength(full, 'utf8'),
+    ' bytes）',
+  );
+  console.log('[openai-apply] ── LLM 调用结束（下方 ai-fix 会打印与修复前的 diff）──');
 }
 
 main().catch((e) => {

@@ -54,6 +54,13 @@ if run_tests; then
 fi
 
 echo "[harness] Tests failed."
+echo ""
+echo "════════════════════════════════════════════════════════════════"
+echo "  AI 修复阶段（Harness 核心价值）"
+echo "  · 原因：API 测试（Karate）与当前实现不一致"
+echo "  · 动作：调用 ai-fix.sh → LLM 或 mock 改写源码，再重启服务复测"
+echo "════════════════════════════════════════════════════════════════"
+echo ""
 echo "[harness] AI repairing..."
 bash scripts/ai-fix.sh
 
@@ -77,6 +84,12 @@ if [[ "$ready" -ne 1 ]]; then
   echo "[harness] ERROR: server did not become ready after patch."
   exit 1
 fi
+
+echo ""
+echo "────────── AI 修复后：现场请求 GET /hello（应对齐契约 {\"message\":\"world\"}）──────────"
+curl -sS "http://127.0.0.1:${PORT}/hello" || true
+echo ""
+echo "────────────────────────────────────────────────────────────────"
 
 echo "[harness] Re-running tests after AI fix..."
 if run_tests; then

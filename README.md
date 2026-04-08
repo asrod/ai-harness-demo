@@ -13,7 +13,7 @@
 | 启动服务 | `harness.sh` 后台启动 `app/server.js`，并轮询直到 `/hello` 可用 |
 | 执行测试 | 调用 `mvn test` 运行 Karate（`test/hello.feature`） |
 | 判定 | 成功则退出 0；失败则进入修复路径 |
-| 失败后续 | 打印 `AI repairing...`，执行 `ai-fix.sh`，**重启 Node 进程**（使补丁生效），再跑 `mvn test` |
+| 失败后续 | 打印 **AI 修复阶段**横幅、`AI repairing...`，执行 `ai-fix.sh`（会打印 **LLM 请求信息** 与 **`diff` 前后对比**），重启 Node 后还会 **curl 打印 `/hello` 响应**，再跑 `mvn test` |
 
 脚本即 Harness 入口：`scripts/harness.sh`。
 
