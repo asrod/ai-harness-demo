@@ -9,6 +9,8 @@ on:
 
 jobs:
   harness:
+    # 在「分支保护 → Required status checks」里选这个名字（完整显示为：AI Harness Demo / PR Karate Harness）
+    name: PR Karate Harness
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -43,7 +43,26 @@ node app/server.js
 
 ## GitHub Actions
 
-推送至 GitHub 后，工作流 `.github/workflows/ci.yml` 会安装 Node/Java/Maven，执行 `harness.sh`。`permissions: contents: write` 用于在修复后向 `fix/ai-repair` 推送提交（受分支保护策略影响时可能推送失败，日志中会有提示）。
+推送至 GitHub 后，工作流 `.github/workflows/ci.yml` 会安装 Node/Java/Maven，执行 `harness.sh`（内含 Karate API 测试）。`permissions: contents: write` 用于在修复后向 PR 分支或 `fix/ai-repair` 推送提交（受分支保护策略影响时可能推送失败，日志中会有提示）。
+
+### 合并 PR 前必须跑通测试（必过检查）
+
+GitHub **不会**自动把「测试通过」当成合并门槛，需要在仓库里打开 **分支保护 / 规则**：
+
+**方式 A：经典分支保护（Branch protection rule）**
+
+1. 打开 **Settings → Branches → Branch protection rules → Add rule**（或编辑已有 `main` 规则）。
+2. **Branch name pattern** 填 `main`。
+3. 勾选 **Require status checks to pass before merging**。
+4. 在 **Status checks that are required** 里添加：**`PR Karate Harness`**（对应本仓库 workflow **AI Harness Demo** 里的 job 显示名）。  
+   - 若下拉列表里没有：先在 `main` 上跑成功一次该 workflow，或开/更一个 PR 让检查出现过，再回来添加。
+5. （推荐）勾选 **Require branches to be up to date before merging**，避免在落后 `main` 的基底上直接合并。
+
+**方式 B：规则集（Settings → Rules → Rulesets）**
+
+新建针对 `main` 的 Ruleset，启用 **Require status checks**，同样把 **`PR Karate Harness`** 设为必选。
+
+配置完成后：PR 在 **Checks** 里该项未通过（或仍为失败）时，**Merge** 会被禁用，直到 Harness/Karate 通过（含 AI 自动修复后再次跑绿的情况）。
 
 ### 用 `gh` 建库并配置 OpenAI（勿在聊天里发送密钥）
 
