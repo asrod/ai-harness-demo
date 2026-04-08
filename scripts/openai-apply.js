@@ -3,7 +3,10 @@
 
 /**
  * 使用 OpenAI Chat Completions（JSON 模式）重写 app/server.js。
- * 环境变量：OPENAI_API_KEY（必填）、OPENAI_MODEL（默认 gpt-4o-mini）、OPENAI_API_BASE（默认 https://api.openai.com/v1）
+ * 环境变量：
+ *   OPENAI_API_KEY（必填）
+ *   OPENAI_MODEL（默认 gpt-4o-mini）
+ *   OPENAI_API_BASE 或 OPENAI_BASE_URL（API 根地址，默认 https://api.openai.com/v1，勿尾斜杠）
  */
 const fs = require('fs');
 const path = require('path');
@@ -18,7 +21,11 @@ if (!key || !String(key).trim()) {
 }
 
 const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-const apiBase = (process.env.OPENAI_API_BASE || 'https://api.openai.com/v1').replace(/\/$/, '');
+const apiBase = (
+  process.env.OPENAI_API_BASE ||
+  process.env.OPENAI_BASE_URL ||
+  'https://api.openai.com/v1'
+).replace(/\/$/, '');
 const url = `${apiBase}/chat/completions`;
 
 const current = fs.readFileSync(serverPath, 'utf8');

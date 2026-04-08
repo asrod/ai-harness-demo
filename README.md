@@ -54,22 +54,42 @@ node app/server.js
    gh repo create YOUR_ORG/ai-harness-demo --public --source=. --remote=origin --push
    ```
 
-3. **仅在你本机终端**写入 Secret（不要把 key 贴到任何聊天或代码里）：
+3. **在 GitHub 上要配三项**（CI 与工作流一致）：
+
+   | 配置项 | 放哪里 | 含义 |
+   |--------|--------|------|
+   | `OPENAI_API_KEY` | **Secrets** | OpenAI API 密钥（`sk-...`） |
+   | `OPENAI_API_BASE` | **Variables** | API 根地址，如 `https://api.openai.com/v1`（不要末尾 `/`） |
+   | `OPENAI_MODEL` | **Variables** | 模型名，如 `gpt-4o-mini`、`gpt-4o` |
+
+   **Secret（仅在本机终端执行，勿把 key 发到聊天）：**
 
    ```bash
    gh secret set OPENAI_API_KEY --repo YOUR_ORG/ai-harness-demo
    ```
 
-   按提示粘贴 `sk-...` 后回车即可。
+   **Variables（可明文，适合 URL 与模型名）：**
 
-4. 在 GitHub 上 **Actions** 里手动 **Re-run** 一次 workflow，或向 `main` 再推一个空 commit。未配置 `OPENAI_API_KEY` 时 CI 仍会通过（走 mock 修复）。
+   ```bash
+   gh variable set OPENAI_API_BASE --body "https://api.openai.com/v1" --repo YOUR_ORG/ai-harness-demo
+   gh variable set OPENAI_MODEL --body "gpt-4o-mini" --repo YOUR_ORG/ai-harness-demo
+   ```
 
-可选：覆盖模型或兼容代理式 Base URL（本地/自托管）：
+   也可在网页：**Settings → Secrets and variables → Actions** 中分别添加。
+
+   未配置 `OPENAI_API_KEY` 时 CI 仍会通过（走 **mock** 修复）。配置了 Key 但未设 Variable 时：`OPENAI_API_BASE` / `OPENAI_MODEL` 会用脚本内默认值（官方地址 + `gpt-4o-mini`）。
+
+4. 在 **Actions** 里 **Re-run** 一次 workflow，或向 `main` 再推一个 commit。
+
+**本地跑 harness 并走真实 OpenAI**（同样在终端导出，勿泄露 key）：
 
 ```bash
-export OPENAI_MODEL=gpt-4o-mini
-export OPENAI_API_BASE=https://api.openai.com/v1   # 一般无需改
+export OPENAI_API_KEY="sk-..."   # 必填
+export OPENAI_API_BASE="https://api.openai.com/v1"   # 可选
+export OPENAI_MODEL="gpt-4o-mini"                     # 可选
 ```
+
+（`OPENAI_BASE_URL` 与 `OPENAI_API_BASE` 等价，任选其一。）
 
 ## 项目结构
 

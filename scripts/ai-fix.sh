@@ -8,7 +8,9 @@ SERVER_FILE="app/server.js"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if [[ -n "${OPENAI_API_KEY:-}" ]]; then
+  _BASE="${OPENAI_API_BASE:-${OPENAI_BASE_URL:-https://api.openai.com/v1}}"
   echo "[ai-fix] Mode: OpenAI API"
+  echo "[ai-fix] API base: ${_BASE}"
   echo "[ai-fix] Model: ${OPENAI_MODEL:-gpt-4o-mini}"
   echo "[ai-fix] Reasoning: delegating code repair to LLM (JSON fullFile response)"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

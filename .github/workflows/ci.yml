@@ -43,9 +43,12 @@ jobs:
       - name: Run harness (tests + optional AI repair)
         run: bash scripts/harness.sh
         env:
-          # 在仓库 Settings → Secrets 中配置 OPENAI_API_KEY；未配置时 ai-fix 走 mock
+          # Secret：仅密钥。未配置 OPENAI_API_KEY 时 ai-fix 走 mock。
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: gpt-4o-mini
+          # Repository variables：API 根 URL 与模型（Settings → Secrets and variables → Actions → Variables）
+          # 示例 OPENAI_API_BASE: https://api.openai.com/v1
+          OPENAI_API_BASE: ${{ vars.OPENAI_API_BASE }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
 
       - name: Show recent git log (debug)
         if: always()
