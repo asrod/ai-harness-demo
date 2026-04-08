@@ -19,7 +19,7 @@
 
 ## 什么是 AI Harness？
 
-**AI Harness** 在普通 Harness 上增加一环：**当测试失败时，自动修复代码并提交**。若设置了环境变量 `OPENAI_API_KEY`，`scripts/ai-fix.sh` 会调用 `scripts/openai-apply.js` 请求 OpenAI（JSON 模式，返回完整 `app/server.js`）；否则使用 **mock**（`perl` 将 `'wrong'` 改为 `'world'`）。修复后会在分支 `fix/ai-repair` 上提交；在 GitHub Actions 中还会尝试 `git push`。
+**AI Harness** 在普通 Harness 上增加一环：**当测试失败时，自动修复代码并提交**。若设置了 `OPENAI_API_KEY`，`openai-apply.js` 会把 **`test/*.feature` 全文**作为契约交给模型，改写 **`HARNESS_SERVER_FILE`（默认 `app/server.js`）**，并由模型生成 **`commitSubject` / `commitBody`**（`git commit -F`，不是写死的 “align /hello…”）。未配置 Key 时使用 **mock**（`perl` 替换 `'wrong'`→`'world'`），提交说明为通用占位。可选环境变量 **`HARNESS_CONTRACT_HINT`** 可再给模型一句补充说明。
 
 ## 本地运行
 
