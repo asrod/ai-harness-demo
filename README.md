@@ -74,7 +74,29 @@ GitHub **不会**自动把「测试通过」当成合并门槛，需要在仓库
   `git checkout <PR 头分支> && git commit --allow-empty -m "chore: trigger CI" && git push`
 - 或使用 **Actions → AI Harness Demo → Run workflow**，在 **ref** 里填 PR 头分支名（如 `feat/test-AI`），在最新代码上再跑一轮检查。
 
-**推荐根治：** 在仓库 Secrets 中增加 **`AI_HARNESS_PUSH_TOKEN`**（[Fine-grained PAT](https://github.com/settings/tokens?type=beta)，仅本仓库 **Contents: Read and write**）。本 workflow 的 checkout 已配置为 **`secrets.AI_HARNESS_PUSH_TOKEN || secrets.GITHUB_TOKEN`**，配置 PAT 后机器人推送会正常触发下一轮 CI，必选检查会落在最新 commit 上。
+**推荐根治：配置 `AI_HARNESS_PUSH_TOKEN`**
+
+Workflow 里 checkout 使用 **`secrets.AI_HARNESS_PUSH_TOKEN || secrets.GITHUB_TOKEN`**（见 `.github/workflows/ci.yml`）。配置 PAT 后，机器人用该凭据推送的 commit 会**再次触发** Actions，必选检查会出现在**最新** commit 上。
+
+1. **创建 Fine-grained PAT**  
+   - 打开 [Personal access tokens（Fine-grained）](https://github.com/settings/tokens?type=beta) → **Generate new token**。  
+   - **Repository access**：只选本仓库（例如 `YOUR_ORG/ai-harness-demo`）。  
+   - **Repository permissions → Contents**：**Read and write**（推送修复 commit 所需）。  
+   - 生成后**立即复制** token（页面关闭后不可再查看）。  
+   - 若环境只允许 **Classic token**：新建时勾选 **`repo`**（权限更大，仅作备选）。
+
+2. **写入仓库 Secret**  
+   - 网页：**Settings → Secrets and variables → Actions → New repository secret**。  
+   - **Name**：必须是 **`AI_HARNESS_PUSH_TOKEN`**（与 workflow 一致）。  
+   - **Secret**：粘贴 PAT。  
+   - 或使用 GitHub CLI（**勿在聊天里发送密钥**；执行后按提示粘贴或从 stdin/文件读入）：  
+     ```bash
+     gh secret set AI_HARNESS_PUSH_TOKEN --repo YOUR_ORG/ai-harness-demo
+     ```
+
+3. **验证**  
+   - 触发一次会 `git push` 的 harness（或 Re-run 失败作业后再推修复）；新 commit 上应自动出现下一轮 **AI Harness Demo / PR Karate Harness**。  
+   - 若当前 PR 仍停在旧 SHA，可配合上文「空提交」或 **Run workflow** 先跑绿一次。
 
 ### 用 `gh` 建库并配置 OpenAI（勿在聊天里发送密钥）
 
@@ -85,10 +107,11 @@ GitHub **不会**自动把「测试通过」当成合并门槛，需要在仓库
    gh repo create YOUR_ORG/ai-harness-demo --public --source=. --remote=origin --push
    ```
 
-3. **在 GitHub 上要配三项**（CI 与工作流一致）：
+3. **在 GitHub 上要配的内容**（按需要；CI 与工作流一致）：
 
    | 配置项 | 放哪里 | 含义 |
    |--------|--------|------|
+   | `AI_HARNESS_PUSH_TOKEN` | **Secrets** | （**推荐**）Fine-grained PAT，本仓库 **Contents: Read and write**；机器人推送后再次触发 CI，避免 PR 卡在必选检查。详见上文 **配置 `AI_HARNESS_PUSH_TOKEN`**。 |
    | `OPENAI_API_KEY` | **Secrets** | OpenAI API 密钥（`sk-...`） |
    | `OPENAI_API_BASE` | **Variables** | API 根地址，如 `https://api.openai.com/v1`（不要末尾 `/`） |
    | `OPENAI_MODEL` | **Variables** | 模型名，如 `gpt-4o-mini`、`gpt-4o` |
