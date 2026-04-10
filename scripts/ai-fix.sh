@@ -89,9 +89,10 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
   fi
 
   if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
-    git push -u origin "$BRANCH" || {
-      echo "[ai-fix] WARN: git push failed (check token / branch protection)."
-    }
+    if ! git push -u origin "$BRANCH"; then
+      echo "[ai-fix] ERROR: git push failed (check token / branch protection)." >&2
+      exit 1
+    fi
   fi
 else
   echo "[ai-fix] Not a git repository — skipped branch/commit (local file still patched)."
